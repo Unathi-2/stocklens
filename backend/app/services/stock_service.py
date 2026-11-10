@@ -200,6 +200,7 @@ def movers(db: Session, exchange: str | None = None, limit: int = 5) -> tuple[li
                 symbol=company.symbol,
                 name=company.name,
                 exchange=company.exchange,
+                currency=company.currency,
                 as_of=d,
                 price=last,
                 change_pct=(last - prev) / prev * 100,

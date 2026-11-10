@@ -1,1 +1,89 @@
 @import "tailwindcss";
+
+/* Semantic colour tokens. Components use these names, never raw colours. */
+:root {
+  --bg: #f2f4f1;
+  --panel: #ffffff;
+  --panel2: #e8ece9;
+  --rule: #cdd5d2;
+  --ink: #121b1e;
+  --muted: #566568;
+  --accent: #2b4acb;
+  --accent-fg: #ffffff;
+  --up: #0d7a55;
+  --down: #b83a2b;
+}
+[data-theme="dark"] {
+  --bg: #0b1316;
+  --panel: #111b1f;
+  --panel2: #172429;
+  --rule: #24343a;
+  --ink: #e3ebe8;
+  --muted: #8d9fa1;
+  --accent: #8fb4ff;
+  --accent-fg: #08121f;
+  --up: #46d19f;
+  --down: #f27a69;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-panel: var(--panel);
+  --color-panel2: var(--panel2);
+  --color-rule: var(--rule);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-up: var(--up);
+  --color-down: var(--down);
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Newsreader", Georgia, "Times New Roman", serif;
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+  }
+  html[data-theme="dark"] {
+    color-scheme: dark;
+  }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-fg);
+  }
+}
+
+@layer components {
+  /* Numbers line up in columns. */
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Large figures use the serif. */
+  .figure {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    font-variant-numeric: lining-nums tabular-nums;
+    letter-spacing: -0.01em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -11,15 +11,16 @@ from app.core.database import SessionLocal
 from app.models import Company
 
 # (symbol, provider_symbol, name, exchange, asset_type, currency, country)
+# Yahoo quotes JSE equities in cents, so their currency is ZAc. Indices are in points.
 UNIVERSE = [
     ("J203", "^J203.JO", "FTSE/JSE All Share Index", "JSE", "index", "ZAR", "South Africa"),
-    ("NPN", "NPN.JO", "Naspers", "JSE", "equity", "ZAR", "South Africa"),
-    ("PRX", "PRX.JO", "Prosus", "JSE", "equity", "ZAR", "South Africa"),
-    ("SBK", "SBK.JO", "Standard Bank Group", "JSE", "equity", "ZAR", "South Africa"),
-    ("FSR", "FSR.JO", "FirstRand", "JSE", "equity", "ZAR", "South Africa"),
-    ("MTN", "MTN.JO", "MTN Group", "JSE", "equity", "ZAR", "South Africa"),
-    ("SOL", "SOL.JO", "Sasol", "JSE", "equity", "ZAR", "South Africa"),
-    ("SHP", "SHP.JO", "Shoprite Holdings", "JSE", "equity", "ZAR", "South Africa"),
+    ("NPN", "NPN.JO", "Naspers", "JSE", "equity", "ZAc", "South Africa"),
+    ("PRX", "PRX.JO", "Prosus", "JSE", "equity", "ZAc", "South Africa"),
+    ("SBK", "SBK.JO", "Standard Bank Group", "JSE", "equity", "ZAc", "South Africa"),
+    ("FSR", "FSR.JO", "FirstRand", "JSE", "equity", "ZAc", "South Africa"),
+    ("MTN", "MTN.JO", "MTN Group", "JSE", "equity", "ZAc", "South Africa"),
+    ("SOL", "SOL.JO", "Sasol", "JSE", "equity", "ZAc", "South Africa"),
+    ("SHP", "SHP.JO", "Shoprite Holdings", "JSE", "equity", "ZAc", "South Africa"),
     ("GSPC", "^GSPC", "S&P 500 Index", "NYSE", "index", "USD", "United States"),
     ("AAPL", "AAPL", "Apple Inc.", "NASDAQ", "equity", "USD", "United States"),
     ("MSFT", "MSFT", "Microsoft Corporation", "NASDAQ", "equity", "USD", "United States"),

@@ -63,6 +63,7 @@ class MoverOut(BaseModel):
     symbol: str
     name: str
     exchange: str
+    currency: str
     as_of: date
     price: float
     change_pct: float

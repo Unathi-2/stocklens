@@ -79,6 +79,7 @@ def test_markets_lists_indices_only(client):
 def test_movers_ordering(client):
     data = client.get("/api/v1/markets/movers", params={"exchange": "JSE"}).json()["data"]
     assert data["gainers"][0]["symbol"] == "NPN" and round(data["gainers"][0]["change_pct"], 6) == 10.0
+    assert data["gainers"][0]["currency"] == "ZAR"
     assert data["losers"][0]["symbol"] == "SBK" and round(data["losers"][0]["change_pct"], 6) == -5.0
 
 
