@@ -22,7 +22,7 @@ def main() -> None:
     parser.add_argument("--profiles", action="store_true", help="also refresh sector and market cap")
     args = parser.parse_args()
 
-    end = date.today()
+    end = date.today() - timedelta(days=1)
     start = end - timedelta(days=365 * args.years)
     provider = get_provider()
 
