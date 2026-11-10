@@ -75,3 +75,32 @@ export interface ExchangeStatus {
 
 export type Period = "1m" | "3m" | "6m" | "1y" | "5y" | "max";
 export type Interval = "1d" | "1wk" | "1mo";
+
+export interface Point {
+  date: string;
+  value: number;
+}
+
+export interface IndicatorSeries {
+  name: string;
+  kind: "sma" | "ema";
+  window: number;
+  points: Point[];
+}
+
+export interface PerformanceSummary {
+  start_date: string;
+  end_date: string;
+  observations: number;
+  total_return_pct: number;
+  annualised_volatility_pct: number;
+  mean_daily_return_pct: number;
+  best_day: Point;
+  worst_day: Point;
+}
+
+export interface Performance {
+  summary: PerformanceSummary;
+  cumulative_return: Point[];
+  daily_returns: Point[];
+}

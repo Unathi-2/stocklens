@@ -1,5 +1,5 @@
 import type {
-  Bar, Company, Envelope, ExchangeStatus, Interval, Movers, Period, Profile, Quote,
+  Bar, Company, Envelope, ExchangeStatus, IndicatorSeries, Interval, Movers, Performance, Period, Profile, Quote,
 } from "../types/api";
 
 export class ApiError extends Error {
@@ -32,6 +32,9 @@ async function request<T>(path: string, params: Params = {}): Promise<Envelope<T
   const body = await res.json().catch(() => null);
   if (!res.ok) {
     const err = body?.error;
+    if (!err && res.status >= 500) {
+      throw new ApiError("api_unavailable", "The API did not respond. Check that the backend and database are running.", res.status);
+    }
     const fallback = res.status === 422 ? "The request was not valid." : res.statusText || "Request failed.";
     throw new ApiError(err?.code ?? "http_error", err?.message ?? fallback, res.status);
   }
@@ -46,6 +49,12 @@ export const api = {
   getQuote: (symbol: string, exchange?: string) => request<Quote>(`${stock(symbol)}/quote`, { exchange }),
   getHistory: (symbol: string, opts: { period?: Period; interval?: Interval; exchange?: string } = {}) =>
     request<Bar[]>(`${stock(symbol)}/history`, opts),
+  getIndicators: (
+    symbol: string,
+    opts: { period?: Period; interval?: Interval; sma?: string; ema?: string; exchange?: string } = {},
+  ) => request<IndicatorSeries[]>(`${stock(symbol)}/indicators`, opts),
+  getPerformance: (symbol: string, opts: { period?: Period; exchange?: string } = {}) =>
+    request<Performance>(`${stock(symbol)}/performance`, opts),
   getMarkets: () => request<Quote[]>("/api/v1/markets"),
   getMarketStatus: () => request<ExchangeStatus[]>("/api/v1/markets/status"),
   getMovers: (exchange?: string, limit = 5) => request<Movers>("/api/v1/markets/movers", { exchange, limit }),

@@ -5,12 +5,35 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.schemas.stock import BarOut, CompanyOut, Envelope, ProfileOut, QuoteOut
+from app.core.errors import InvalidParameter
+from app.schemas.stock import (
+    BarOut, CompanyOut, Envelope, IndicatorOut, PerformanceOut, ProfileOut, QuoteOut,
+)
 from app.services import stock_service as svc
 
 router = APIRouter(prefix="/api/v1/stocks", tags=["stocks"])
 
 ERRORS = {404: {"description": "Stock or price data not found"}, 409: {"description": "Symbol on several exchanges"}}
+Period = Literal["1m", "3m", "6m", "1y", "5y", "max"]
+Interval = Literal["1d", "1wk", "1mo"]
+MAX_WINDOWS = 6
+
+
+def parse_windows(raw: str, name: str) -> list[int]:
+    """Turn "20,50,200" into [20, 50, 200], with limits that keep requests cheap."""
+    if not raw.strip():
+        return []
+    try:
+        values = [int(part) for part in raw.split(",") if part.strip()]
+    except ValueError:
+        raise InvalidParameter(f"{name} must be a comma separated list of whole numbers, for example 20,50,200.")
+    if len(values) > MAX_WINDOWS:
+        raise InvalidParameter(f"{name} accepts at most {MAX_WINDOWS} windows.")
+    if any(v < 2 or v > 400 for v in values):
+        raise InvalidParameter(f"Each {name} window must be between 2 and 400.")
+    return values
+
+
 Exchange = Query(None, description="Exchange filter, needed only when a symbol exists on several exchanges")
 
 
@@ -44,8 +67,8 @@ def get_quote(symbol: str, exchange: str | None = Exchange, db: Session = Depend
 @router.get("/{symbol}/history", response_model=Envelope[list[BarOut]], responses=ERRORS)
 def get_history(
     symbol: str,
-    period: Literal["1m", "3m", "6m", "1y", "5y", "max"] = "1y",
-    interval: Literal["1d", "1wk", "1mo"] = "1d",
+    period: Period = "1y",
+    interval: Interval = "1d",
     start: date | None = Query(None, description="Overrides period when given"),
     end: date | None = None,
     exchange: str | None = Exchange,
@@ -56,4 +79,40 @@ def get_history(
     return {
         "data": bars,
         "meta": {"count": len(bars), "period": period, "interval": interval, "currency": company.currency},
+    }
+
+
+@router.get("/{symbol}/indicators", response_model=Envelope[list[IndicatorOut]], responses=ERRORS)
+def get_indicators(
+    symbol: str,
+    period: Period = "1y",
+    interval: Interval = "1d",
+    start: date | None = Query(None, description="Overrides period when given"),
+    end: date | None = None,
+    sma: str = Query("20,50,200", description="Simple moving average windows, comma separated"),
+    ema: str = Query("20", description="Exponential moving average spans, comma separated"),
+    exchange: str | None = Exchange,
+    db: Session = Depends(get_db),
+):
+    sma_windows = parse_windows(sma, "sma")
+    ema_windows = parse_windows(ema, "ema")
+    company = svc.find_company(db, symbol, exchange)
+    series = svc.get_indicators(db, company, period, interval, start, end, sma_windows, ema_windows)
+    return {"data": series, "meta": {"price_basis": "close", "interval": interval}}
+
+
+@router.get("/{symbol}/performance", response_model=Envelope[PerformanceOut], responses=ERRORS)
+def get_performance(
+    symbol: str,
+    period: Period = "1y",
+    start: date | None = Query(None, description="Overrides period when given"),
+    end: date | None = None,
+    exchange: str | None = Exchange,
+    db: Session = Depends(get_db),
+):
+    company = svc.find_company(db, symbol, exchange)
+    result = svc.get_performance(db, company, period, start, end)
+    return {
+        "data": result,
+        "meta": {"price_basis": "adjusted close", "return_type": "log", "trading_days_per_year": 252},
     }

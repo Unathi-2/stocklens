@@ -8,7 +8,7 @@ Portfolio ready means phases 0 to 9 plus basic deployment. Phases 10 and 11 are 
 - [x] Phase 3 Market data pipeline (JSE and US)
 - [x] Phase 4 REST API for stocks and markets
 - [x] Phase 5 Frontend foundation and design system
-- [ ] Phase 6 Charts and stock page tabs (first release; dashboard and basic stock page already built)
+- [x] Phase 6 Charts and stock page (first release)
 - [ ] Phase 7 Statistical analytics
 - [ ] Phase 8 Risk and volatility engine
 - [ ] Phase 9 Volatility forecasting and model comparison

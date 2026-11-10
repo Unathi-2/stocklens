@@ -1,5 +1,5 @@
 from datetime import date
-from typing import Generic, TypeVar
+from typing import Generic, Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict
 
@@ -81,3 +81,37 @@ class ExchangeStatusOut(BaseModel):
     opens: str
     closes: str
     note: str
+
+
+class PointOut(BaseModel):
+    date: date
+    value: float
+
+
+class IndicatorOut(BaseModel):
+    name: str
+    kind: Literal["sma", "ema"]
+    window: int
+    points: list[PointOut]
+
+
+class DayValueOut(BaseModel):
+    date: date
+    value: float
+
+
+class PerformanceSummaryOut(BaseModel):
+    start_date: date
+    end_date: date
+    observations: int
+    total_return_pct: float
+    annualised_volatility_pct: float
+    mean_daily_return_pct: float
+    best_day: DayValueOut
+    worst_day: DayValueOut
+
+
+class PerformanceOut(BaseModel):
+    summary: PerformanceSummaryOut
+    cumulative_return: list[PointOut]
+    daily_returns: list[PointOut]

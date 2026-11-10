@@ -5,12 +5,26 @@ import pandas as pd
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.core.errors import AmbiguousSymbol, NoPriceData, StockNotFound
+from app.analytics import performance, technical
+from app.analytics.returns import log_returns
+from app.core.errors import AmbiguousSymbol, InsufficientData, NoPriceData, StockNotFound
 from app.models import Company, PriceHistory
-from app.schemas.stock import BarOut, MoverOut, ProfileOut, QuoteOut
+from app.schemas.stock import (
+    BarOut, DayValueOut, IndicatorOut, MoverOut, PerformanceOut, PerformanceSummaryOut,
+    PointOut, ProfileOut, QuoteOut,
+)
 
 PERIOD_DAYS = {"1m": 31, "3m": 92, "6m": 183, "1y": 366, "5y": 1827}
 RESAMPLE_RULE = {"1wk": "W-FRI", "1mo": "ME"}
+
+
+def _resolve_start(latest: date, period: str, start: date | None) -> date | None:
+    """An explicit start wins. Otherwise count back from the latest stored date."""
+    if start is not None:
+        return start
+    if period == "max":
+        return None
+    return latest - timedelta(days=PERIOD_DAYS[period])
 
 
 def find_company(db: Session, symbol: str, exchange: str | None = None) -> Company:
@@ -104,8 +118,7 @@ def get_history(
     if latest is None:
         raise NoPriceData(company.symbol)
 
-    if start is None and period != "max":
-        start = latest - timedelta(days=PERIOD_DAYS[period])
+    start = _resolve_start(latest, period, start)
 
     query = select(PriceHistory).where(PriceHistory.company_id == company.id)
     if start:
@@ -210,3 +223,62 @@ def movers(db: Session, exchange: str | None = None, limit: int = 5) -> tuple[li
     gainers = [m for m in results if m.change_pct > 0][:limit]
     losers = sorted([m for m in results if m.change_pct < 0], key=lambda m: m.change_pct)[:limit]
     return gainers, losers
+
+
+def get_indicators(
+    db: Session,
+    company: Company,
+    period: str,
+    interval: str,
+    start: date | None,
+    end: date | None,
+    sma_windows: list[int],
+    ema_windows: list[int],
+) -> list[IndicatorOut]:
+    """Moving averages are computed on the full history and trimmed afterwards,
+    so a 200 day average is already valid on the first day of a 1 year window."""
+    full = get_history(db, company, "max", interval)
+    closes = pd.Series([b.close for b in full], index=pd.to_datetime([b.date for b in full]))
+    lo = _resolve_start(full[-1].date, period, start)
+
+    jobs = [("sma", w, technical.sma(closes, w)) for w in sma_windows]
+    jobs += [("ema", w, technical.ema(closes, w)) for w in ema_windows]
+
+    out: list[IndicatorOut] = []
+    for kind, window, series in jobs:
+        points = [
+            PointOut(date=ts.date(), value=float(v))
+            for ts, v in series.dropna().items()
+            if (lo is None or ts.date() >= lo) and (end is None or ts.date() <= end)
+        ]
+        out.append(IndicatorOut(name=f"{kind.upper()} {window}", kind=kind, window=window, points=points))
+    return out
+
+
+def get_performance(
+    db: Session, company: Company, period: str, start: date | None, end: date | None
+) -> PerformanceOut:
+    """Daily total return measures. Uses adjusted closes so dividends are included."""
+    bars = get_history(db, company, period, "1d", start, end)
+    if len(bars) < 3:
+        raise InsufficientData(company.symbol)
+
+    prices = pd.Series([b.adjusted_close for b in bars], index=pd.to_datetime([b.date for b in bars]))
+    s = performance.summarise(prices)
+    cumulative = performance.cumulative_return_pct(prices)
+    returns = log_returns(prices) * 100.0
+
+    return PerformanceOut(
+        summary=PerformanceSummaryOut(
+            start_date=s["start_date"],
+            end_date=s["end_date"],
+            observations=s["observations"],
+            total_return_pct=s["total_return_pct"],
+            annualised_volatility_pct=s["annualised_volatility_pct"],
+            mean_daily_return_pct=s["mean_daily_return_pct"],
+            best_day=DayValueOut(date=s["best_day"][0], value=s["best_day"][1]),
+            worst_day=DayValueOut(date=s["worst_day"][0], value=s["worst_day"][1]),
+        ),
+        cumulative_return=[PointOut(date=ts.date(), value=float(v)) for ts, v in cumulative.items()],
+        daily_returns=[PointOut(date=ts.date(), value=float(v)) for ts, v in returns.items()],
+    )

@@ -6,7 +6,9 @@ StockLens is an analytics application. It does not trade, and it does not tell a
 
 ## Status
 
-Phase 1 complete when this scaffold runs. See docs/roadmap.md for the full plan.
+Working today: JSE and US data pipeline, REST API, dashboard, stock pages with interactive price charts
+(line or candles, volume, moving averages), and return and volatility summaries.
+See docs/roadmap.md for the full plan and docs/methodology.md for the formulas.
 
 ## Planned features
 

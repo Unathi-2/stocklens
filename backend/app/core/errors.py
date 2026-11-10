@@ -20,6 +20,16 @@ class NoPriceData(Exception):
         self.symbol = symbol
 
 
+class InsufficientData(Exception):
+    def __init__(self, symbol: str):
+        self.symbol = symbol
+
+
+class InvalidParameter(Exception):
+    def __init__(self, message: str):
+        self.message = message
+
+
 def _body(code: str, message: str) -> dict:
     return {"error": {"code": code, "message": message}}
 
@@ -37,3 +47,12 @@ def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(NoPriceData)
     async def _no_data(_: Request, exc: NoPriceData):
         return JSONResponse(status_code=404, content=_body("no_price_data", f"No price data stored for {exc.symbol}."))
+
+    @app.exception_handler(InsufficientData)
+    async def _insufficient(_: Request, exc: InsufficientData):
+        msg = f"Not enough price history for {exc.symbol} in this range. Choose a longer period."
+        return JSONResponse(status_code=422, content=_body("insufficient_data", msg))
+
+    @app.exception_handler(InvalidParameter)
+    async def _invalid(_: Request, exc: InvalidParameter):
+        return JSONResponse(status_code=422, content=_body("invalid_parameter", exc.message))
