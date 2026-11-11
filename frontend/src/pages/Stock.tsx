@@ -12,6 +12,7 @@ import RangeSelector from "../components/ui/RangeSelector";
 import Select from "../components/ui/Select";
 import Tabs, { type TabItem } from "../components/ui/Tabs";
 import Toggle from "../components/ui/Toggle";
+import RiskTab from "./RiskTab";
 import StatisticsTab from "./StatisticsTab";
 import { useApi } from "../hooks/useApi";
 import { api } from "../services/api";
@@ -22,7 +23,7 @@ const TABS: TabItem[] = [
   { id: "overview", label: "Overview" },
   { id: "performance", label: "Performance" },
   { id: "technical", label: "Technical", disabled: true },
-  { id: "risk", label: "Risk", disabled: true },
+  { id: "risk", label: "Risk" },
   { id: "statistics", label: "Statistics" },
   { id: "forecast", label: "Forecast", disabled: true },
 ];
@@ -184,6 +185,10 @@ export default function Stock() {
             </dl>
           </Panel>
         </div>
+      )}
+
+      {tab === "risk" && (
+        <RiskTab symbol={symbol} exchange={exchange} period={period} periodControl={periodControl} />
       )}
 
       {tab === "statistics" && (

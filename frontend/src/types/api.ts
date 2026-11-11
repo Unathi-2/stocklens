@@ -136,3 +136,73 @@ export interface Statistics {
   tests: TestResult[];
   acf: { lags: number[]; returns: number[]; squared_returns: number[]; pacf_returns: number[]; confidence_bound: number };
 }
+
+export interface RiskSummary {
+  annualised_return_pct: number | null;
+  annualised_volatility_pct: number;
+  downside_deviation_pct: number;
+  sharpe: number | null;
+  sortino: number | null;
+  calmar: number | null;
+  risk_free_pct: number;
+}
+
+export interface Drawdown {
+  max_drawdown_pct: number;
+  peak_date: string | null;
+  trough_date: string | null;
+  recovery_date: string | null;
+  current_drawdown_pct: number;
+  longest_underwater_days: number;
+  series: Point[];
+}
+
+export interface VarRow {
+  confidence: number;
+  historical_var_pct: number;
+  normal_var_pct: number;
+  cornish_fisher_var_pct: number;
+  historical_es_pct: number;
+  normal_es_pct: number;
+}
+
+export interface Backtest {
+  confidence: number;
+  tests: number;
+  violations: number;
+  expected_violations: number;
+  violation_rate_pct: number;
+  lr_statistic: number;
+  p_value: number;
+  reject_null: boolean;
+}
+
+export interface GarchParam {
+  name: string;
+  estimate: number;
+  std_error: number | null;
+  p_value: number | null;
+}
+
+export interface Garch {
+  converged: boolean;
+  parameters: GarchParam[];
+  persistence: number;
+  half_life_days: number | null;
+  unconditional_volatility_pct: number | null;
+  latest_volatility_pct: number;
+  log_likelihood: number;
+  aic: number;
+  bic: number;
+  observations: number;
+  volatility: Point[];
+}
+
+export interface Risk {
+  summary: RiskSummary;
+  drawdown: Drawdown;
+  rolling_volatility: { window: number; points: Point[] }[];
+  var: VarRow[];
+  backtests: Backtest[];
+  garch: Garch | null;
+}

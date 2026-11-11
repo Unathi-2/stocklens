@@ -167,3 +167,78 @@ class StatisticsOut(BaseModel):
     qq: QQOut
     tests: list[TestResultOut]
     acf: CorrelogramOut
+
+
+class RiskSummaryOut(BaseModel):
+    annualised_return_pct: float | None
+    annualised_volatility_pct: float
+    downside_deviation_pct: float
+    sharpe: float | None
+    sortino: float | None
+    calmar: float | None
+    risk_free_pct: float
+
+
+class DrawdownOut(BaseModel):
+    max_drawdown_pct: float
+    peak_date: date | None
+    trough_date: date | None
+    recovery_date: date | None
+    current_drawdown_pct: float
+    longest_underwater_days: int
+    series: list[PointOut]
+
+
+class RollingVolOut(BaseModel):
+    window: int
+    points: list[PointOut]
+
+
+class VarRowOut(BaseModel):
+    confidence: float
+    historical_var_pct: float
+    normal_var_pct: float
+    cornish_fisher_var_pct: float
+    historical_es_pct: float
+    normal_es_pct: float
+
+
+class BacktestOut(BaseModel):
+    confidence: float
+    tests: int
+    violations: int
+    expected_violations: float
+    violation_rate_pct: float
+    lr_statistic: float
+    p_value: float
+    reject_null: bool
+
+
+class GarchParamOut(BaseModel):
+    name: str
+    estimate: float
+    std_error: float | None
+    p_value: float | None
+
+
+class GarchOut(BaseModel):
+    converged: bool
+    parameters: list[GarchParamOut]
+    persistence: float
+    half_life_days: float | None
+    unconditional_volatility_pct: float | None
+    latest_volatility_pct: float
+    log_likelihood: float
+    aic: float
+    bic: float
+    observations: int
+    volatility: list[PointOut]
+
+
+class RiskOut(BaseModel):
+    summary: RiskSummaryOut
+    drawdown: DrawdownOut
+    rolling_volatility: list[RollingVolOut]
+    var: list[VarRowOut]
+    backtests: list[BacktestOut]
+    garch: GarchOut | None

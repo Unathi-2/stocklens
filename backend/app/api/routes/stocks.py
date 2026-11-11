@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.errors import InvalidParameter
 from app.schemas.stock import (
-    BarOut, CompanyOut, Envelope, IndicatorOut, PerformanceOut, ProfileOut, QuoteOut, StatisticsOut,
+    BarOut, CompanyOut, Envelope, IndicatorOut, PerformanceOut, ProfileOut, QuoteOut, RiskOut, StatisticsOut,
 )
 from app.services import stock_service as svc
 
@@ -136,5 +136,31 @@ def get_statistics(
             "return_type": "log, in percent",
             "significance_level": 0.05,
             "minimum_observations": 60,
+        },
+    }
+
+
+@router.get("/{symbol}/risk", response_model=Envelope[RiskOut], responses=ERRORS)
+def get_risk(
+    symbol: str,
+    period: Period = "5y",
+    start: date | None = Query(None, description="Overrides period when given"),
+    end: date | None = None,
+    risk_free: float = Query(0.0, ge=0, le=30, description="Annual risk free rate in percent"),
+    exchange: str | None = Exchange,
+    db: Session = Depends(get_db),
+):
+    company = svc.find_company(db, symbol, exchange)
+    result = svc.get_risk(db, company, period, start, end, risk_free)
+    return {
+        "data": result,
+        "meta": {
+            "price_basis": "adjusted close",
+            "var_horizon": "1 day",
+            "var_returns": "simple daily returns, loss as a positive percent",
+            "volatility_returns": "log, annualised with sqrt(252)",
+            "minimum_observations": 60,
+            "garch_minimum_observations": 500,
+            "backtest_window": 250,
         },
     }

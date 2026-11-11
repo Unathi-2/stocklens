@@ -5,13 +5,13 @@ import pandas as pd
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.analytics import performance, statistics, technical
+from app.analytics import performance, risk, statistics, technical
 from app.analytics.returns import log_returns
 from app.core.errors import AmbiguousSymbol, InsufficientData, NoPriceData, StockNotFound
 from app.models import Company, PriceHistory
 from app.schemas.stock import (
     BarOut, DayValueOut, IndicatorOut, MoverOut, PerformanceOut, PerformanceSummaryOut,
-    PointOut, ProfileOut, QuoteOut, StatisticsOut,
+    PointOut, ProfileOut, QuoteOut, RiskOut, StatisticsOut,
 )
 
 PERIOD_DAYS = {"1m": 31, "3m": 92, "6m": 183, "1y": 366, "5y": 1827}
@@ -293,3 +293,32 @@ def get_statistics(
         raise InsufficientData(company.symbol)
     prices = pd.Series([b.adjusted_close for b in bars], index=pd.to_datetime([b.date for b in bars]))
     return StatisticsOut.model_validate(statistics.analyse(prices))
+
+
+def _points(series: pd.Series) -> list[PointOut]:
+    return [PointOut(date=ts.date(), value=float(v)) for ts, v in series.items()]
+
+
+def get_risk(
+    db: Session, company: Company, period: str, start: date | None, end: date | None, risk_free_pct: float
+) -> RiskOut:
+    """Drawdown, VaR, ES, ratios, rolling volatility and a GARCH(1,1) fit on daily adjusted closes."""
+    bars = get_history(db, company, period, "1d", start, end)
+    if len(bars) < risk.MIN_OBSERVATIONS + 1:
+        raise InsufficientData(company.symbol)
+    prices = pd.Series([b.adjusted_close for b in bars], index=pd.to_datetime([b.date for b in bars]))
+    result = risk.analyse(prices, risk_free_pct)
+
+    garch = result["garch"]
+    if garch is not None:
+        garch = {**garch, "volatility": _points(garch["volatility"])}
+    return RiskOut.model_validate(
+        {
+            **result,
+            "drawdown": {**result["drawdown"], "series": _points(result["drawdown"]["series"])},
+            "rolling_volatility": [
+                {"window": w, "points": _points(s)} for w, s in result["rolling_volatility"].items()
+            ],
+            "garch": garch,
+        }
+    )
