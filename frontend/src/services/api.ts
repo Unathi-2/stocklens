@@ -1,6 +1,7 @@
 import type {
   Bar, Company, Envelope, ExchangeStatus, IndicatorSeries, Interval, Movers, Performance, Period, Profile, Quote, Statistics,
 } from "../types/api";
+import { API_BASE } from "./base";
 
 export class ApiError extends Error {
   code: string;
@@ -20,7 +21,7 @@ async function request<T>(path: string, params: Params = {}): Promise<Envelope<T
     if (value !== undefined && value !== "") qs.set(key, String(value));
   }
   const query = qs.toString();
-  const url = query ? `${path}?${query}` : path;
+  const url = API_BASE + (query ? `${path}?${query}` : path);
 
   let res: Response;
   try {

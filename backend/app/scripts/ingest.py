@@ -22,6 +22,7 @@ def main() -> None:
     parser.add_argument("--profiles", action="store_true", help="also refresh sector and market cap")
     args = parser.parse_args()
 
+    # Never store today's partial bar: end at yesterday.
     end = date.today() - timedelta(days=1)
     start = end - timedelta(days=365 * args.years)
     provider = get_provider()

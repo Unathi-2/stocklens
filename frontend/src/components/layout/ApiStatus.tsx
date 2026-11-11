@@ -1,3 +1,4 @@
+import { API_BASE } from "../../services/base";
 import { useEffect, useState } from "react";
 import Badge from "../ui/Badge";
 
@@ -6,7 +7,7 @@ export default function ApiStatus() {
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/health")
+    fetch(`${API_BASE}/health`)
       .then((r) => r.json())
       .then((d) => !cancelled && setStatus(d.status === "ok" ? "online" : "offline"))
       .catch(() => !cancelled && setStatus("offline"));

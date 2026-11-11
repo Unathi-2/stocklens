@@ -1,10 +1,11 @@
+import { API_BASE } from "../services/base";
 import { useEffect, useState } from "react";
 
 export default function ApiStatus() {
   const [status, setStatus] = useState<"checking" | "online" | "offline">("checking");
 
   useEffect(() => {
-    fetch("/health")
+    fetch(`${API_BASE}/health`)
       .then((r) => r.json())
       .then((d) => setStatus(d.status === "ok" ? "online" : "offline"))
       .catch(() => setStatus("offline"));
