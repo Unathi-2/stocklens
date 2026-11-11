@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.errors import InvalidParameter
 from app.schemas.stock import (
-    BarOut, CompanyOut, Envelope, IndicatorOut, PerformanceOut, ProfileOut, QuoteOut,
+    BarOut, CompanyOut, Envelope, IndicatorOut, PerformanceOut, ProfileOut, QuoteOut, StatisticsOut,
 )
 from app.services import stock_service as svc
 
@@ -115,4 +115,26 @@ def get_performance(
     return {
         "data": result,
         "meta": {"price_basis": "adjusted close", "return_type": "log", "trading_days_per_year": 252},
+    }
+
+
+@router.get("/{symbol}/statistics", response_model=Envelope[StatisticsOut], responses=ERRORS)
+def get_statistics(
+    symbol: str,
+    period: Period = "5y",
+    start: date | None = Query(None, description="Overrides period when given"),
+    end: date | None = None,
+    exchange: str | None = Exchange,
+    db: Session = Depends(get_db),
+):
+    company = svc.find_company(db, symbol, exchange)
+    result = svc.get_statistics(db, company, period, start, end)
+    return {
+        "data": result,
+        "meta": {
+            "price_basis": "adjusted close",
+            "return_type": "log, in percent",
+            "significance_level": 0.05,
+            "minimum_observations": 60,
+        },
     }

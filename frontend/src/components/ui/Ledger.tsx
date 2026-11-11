@@ -16,11 +16,12 @@ interface MetricCardProps {
   note?: ReactNode;
   large?: boolean;
   loading?: boolean;
+  className?: string;
 }
 
-export function MetricCard({ label, value, note, large, loading }: MetricCardProps) {
+export function MetricCard({ label, value, note, large, loading, className }: MetricCardProps) {
   return (
-    <div className="bg-panel px-4 py-3">
+    <div className={cn("bg-panel px-4 py-3", className)}>
       <div className="text-sm text-muted">{label}</div>
       {loading ? (
         <div className="mt-2 h-7 w-24 animate-pulse rounded bg-panel2" />

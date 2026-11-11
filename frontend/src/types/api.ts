@@ -104,3 +104,35 @@ export interface Performance {
   cumulative_return: Point[];
   daily_returns: Point[];
 }
+
+export interface StatsSummary {
+  observations: number;
+  mean_pct: number;
+  median_pct: number;
+  std_pct: number;
+  skewness: number;
+  excess_kurtosis: number;
+  min_pct: number;
+  max_pct: number;
+}
+
+export interface TestResult {
+  id: string;
+  name: string;
+  applied_to: string;
+  null_hypothesis: string;
+  statistic: number;
+  p_value: number;
+  reject_null: boolean;
+  alpha: number;
+  interpretation: string;
+  details: Record<string, number>;
+}
+
+export interface Statistics {
+  summary: StatsSummary;
+  histogram: { bin_centers: number[]; density: number[]; normal_density: number[]; bin_width: number };
+  qq: { theoretical: number[]; sample: number[] };
+  tests: TestResult[];
+  acf: { lags: number[]; returns: number[]; squared_returns: number[]; pacf_returns: number[]; confidence_bound: number };
+}

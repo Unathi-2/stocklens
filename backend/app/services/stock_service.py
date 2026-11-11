@@ -5,13 +5,13 @@ import pandas as pd
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.analytics import performance, technical
+from app.analytics import performance, statistics, technical
 from app.analytics.returns import log_returns
 from app.core.errors import AmbiguousSymbol, InsufficientData, NoPriceData, StockNotFound
 from app.models import Company, PriceHistory
 from app.schemas.stock import (
     BarOut, DayValueOut, IndicatorOut, MoverOut, PerformanceOut, PerformanceSummaryOut,
-    PointOut, ProfileOut, QuoteOut,
+    PointOut, ProfileOut, QuoteOut, StatisticsOut,
 )
 
 PERIOD_DAYS = {"1m": 31, "3m": 92, "6m": 183, "1y": 366, "5y": 1827}
@@ -282,3 +282,14 @@ def get_performance(
         cumulative_return=[PointOut(date=ts.date(), value=float(v)) for ts, v in cumulative.items()],
         daily_returns=[PointOut(date=ts.date(), value=float(v)) for ts, v in returns.items()],
     )
+
+
+def get_statistics(
+    db: Session, company: Company, period: str, start: date | None, end: date | None
+) -> StatisticsOut:
+    """Distribution and time series diagnostics on daily adjusted close log returns."""
+    bars = get_history(db, company, period, "1d", start, end)
+    if len(bars) < statistics.MIN_OBSERVATIONS + 1:
+        raise InsufficientData(company.symbol)
+    prices = pd.Series([b.adjusted_close for b in bars], index=pd.to_datetime([b.date for b in bars]))
+    return StatisticsOut.model_validate(statistics.analyse(prices))

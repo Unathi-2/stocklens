@@ -115,3 +115,55 @@ class PerformanceOut(BaseModel):
     summary: PerformanceSummaryOut
     cumulative_return: list[PointOut]
     daily_returns: list[PointOut]
+
+
+class StatsSummaryOut(BaseModel):
+    observations: int
+    mean_pct: float
+    median_pct: float
+    std_pct: float
+    skewness: float
+    excess_kurtosis: float
+    min_pct: float
+    max_pct: float
+
+
+class HistogramOut(BaseModel):
+    bin_centers: list[float]
+    density: list[float]
+    normal_density: list[float]
+    bin_width: float
+
+
+class QQOut(BaseModel):
+    theoretical: list[float]
+    sample: list[float]
+
+
+class TestResultOut(BaseModel):
+    id: str
+    name: str
+    applied_to: str
+    null_hypothesis: str
+    statistic: float
+    p_value: float
+    reject_null: bool
+    alpha: float
+    interpretation: str
+    details: dict[str, float | int]
+
+
+class CorrelogramOut(BaseModel):
+    lags: list[int]
+    returns: list[float]
+    squared_returns: list[float]
+    pacf_returns: list[float]
+    confidence_bound: float
+
+
+class StatisticsOut(BaseModel):
+    summary: StatsSummaryOut
+    histogram: HistogramOut
+    qq: QQOut
+    tests: list[TestResultOut]
+    acf: CorrelogramOut

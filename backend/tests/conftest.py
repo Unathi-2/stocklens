@@ -59,3 +59,28 @@ def client():
     app.dependency_overrides[get_db] = override
     yield TestClient(app)
     app.dependency_overrides.clear()
+
+
+@pytest.fixture()
+def long_client():
+    """One stock with 400 weekday bars of a seeded random walk."""
+    import numpy as np
+
+    engine = create_engine("sqlite://", poolclass=StaticPool, connect_args={"check_same_thread": False})
+    Base.metadata.create_all(engine)
+    rng = np.random.default_rng(42)
+    closes = 100 * np.exp(np.cumsum(rng.normal(0, 0.01, 400)))
+    with Session(engine) as db:
+        company = Company(symbol="LONG", provider_symbol="LONG", name="Long History Co", exchange="NYSE", currency="USD")
+        db.add(company)
+        db.flush()
+        db.add_all(_bars(company.id, [round(float(c), 4) for c in closes], start=date(2025, 1, 6)))
+        db.commit()
+
+    def override():
+        with Session(engine) as session:
+            yield session
+
+    app.dependency_overrides[get_db] = override
+    yield TestClient(app)
+    app.dependency_overrides.clear()

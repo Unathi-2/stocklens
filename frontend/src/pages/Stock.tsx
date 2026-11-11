@@ -12,6 +12,7 @@ import RangeSelector from "../components/ui/RangeSelector";
 import Select from "../components/ui/Select";
 import Tabs, { type TabItem } from "../components/ui/Tabs";
 import Toggle from "../components/ui/Toggle";
+import StatisticsTab from "./StatisticsTab";
 import { useApi } from "../hooks/useApi";
 import { api } from "../services/api";
 import type { Interval, Period } from "../types/api";
@@ -22,7 +23,7 @@ const TABS: TabItem[] = [
   { id: "performance", label: "Performance" },
   { id: "technical", label: "Technical", disabled: true },
   { id: "risk", label: "Risk", disabled: true },
-  { id: "statistics", label: "Statistics", disabled: true },
+  { id: "statistics", label: "Statistics" },
   { id: "forecast", label: "Forecast", disabled: true },
 ];
 
@@ -185,6 +186,10 @@ export default function Stock() {
         </div>
       )}
 
+      {tab === "statistics" && (
+        <StatisticsTab symbol={symbol} exchange={exchange} period={period} periodControl={periodControl} />
+      )}
+
       {tab === "performance" && (
         <div className="space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -207,6 +212,7 @@ export default function Stock() {
                   loading={!perf}
                 />
                 <MetricCard
+                  className="col-span-2 lg:col-span-1"
                   label="Worst day"
                   value={perf ? formatPct(perf.worst_day.value) : "n/a"}
                   note={perf && <span className="text-muted">{formatDate(perf.worst_day.date)}</span>}

@@ -1,31 +1,23 @@
-# Statistical methodology
 
-All calculations live in backend/app/analytics as pure functions and are covered by unit tests.
+## Statistical analysis (phase 7)
 
-## Prices
+Everything below uses daily log returns in percent, computed from adjusted closes, over the selected window. At least 60 returns are required. Tests use a 5% significance level and report the statistic, the p value and a plain reading. A small p value is evidence against the null hypothesis. A large one only means the data do not contradict it.
 
-Charts show the close. Return measures use the adjusted close, which includes dividends and splits, so they describe total return.
+| Test | Applied to | Null hypothesis | Typical reading for equities |
+|---|---|---|---|
+| Augmented Dickey Fuller | Log prices | Unit root, not stationary | Not rejected: prices are non stationary |
+| Augmented Dickey Fuller | Returns | Unit root, not stationary | Rejected: returns are stationary |
+| ARCH LM (5 lags) | Demeaned returns | No ARCH effects | Often rejected: volatility clusters |
+| Jarque Bera | Returns | Normal (skewness 0, excess kurtosis 0) | Rejected: fat tails |
+| Ljung Box (10 lags) | Returns | No autocorrelation | Often not rejected |
+| Ljung Box (10 lags) | Squared returns | No autocorrelation | Often rejected: volatility clustering |
 
-## Returns
+The ADF regression includes a constant and chooses the lag length by AIC. Critical values at 1%, 5% and 10% are reported.
 
-Daily log return: r_t = ln(P_t / P_{t-1}). Log returns add over time and are the usual input to volatility models.
+Skewness and excess kurtosis are moment estimators, so a normal distribution has 0 for both.
 
-Total return over a window: P_end / P_start minus 1, shown as a percentage.
+Correlograms show the autocorrelation function (ACF) of returns and squared returns and the partial autocorrelation function (PACF) of returns, up to 30 lags (fewer for short windows). The dashed band is plus or minus 1.96 divided by the square root of n.
 
-Cumulative return series: P_t / P_start minus 1, shown as a percentage, so every window starts at zero.
+The Q-Q plot compares standardised sorted returns with standard normal quantiles at plotting positions (i minus 0.5) divided by n.
 
-## Volatility
-
-Annualised volatility: the sample standard deviation of daily log returns (n minus 1 in the denominator) multiplied by the square root of 252 trading days. It is a historical measure and says nothing certain about the future.
-
-## Moving averages
-
-Simple moving average over n closes: the mean of the latest n closes. Defined only once n closes exist.
-
-Exponential moving average with span n: alpha = 2 / (n + 1), E_t = alpha * P_t + (1 minus alpha) * E_{t-1}, seeded with the first close and shown once n closes exist.
-
-Averages are computed on the full stored history and then trimmed to the requested window, so the first point of a window is already fully warmed up.
-
-## Not yet implemented
-
-Distribution tests (ADF, ARCH LM, Jarque Bera, Ljung Box), drawdown, value at risk and the GARCH family arrive in phases 7 to 9.
+Statsmodels and SciPy provide the test implementations. The unit tests check them on simulated data with known properties: white noise, a random walk, GARCH(1,1) data and Student t data.

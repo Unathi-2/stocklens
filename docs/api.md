@@ -1,13 +1,8 @@
 
-## Chart and analytics endpoints (phase 6)
+## Statistics endpoint (phase 7)
 
 | Method | Path | Purpose |
 |---|---|---|
-| GET | /api/v1/stocks/{symbol}/indicators | Simple and exponential moving averages |
-| GET | /api/v1/stocks/{symbol}/performance | Return and volatility summary with cumulative and daily return series |
+| GET | /api/v1/stocks/{symbol}/statistics | Summary statistics, histogram, Q-Q data, six hypothesis tests, ACF and PACF |
 
-indicators parameters: period, interval, start, end, sma (default 20,50,200), ema (default 20), exchange. Windows must be whole numbers from 2 to 400, at most 6 per list. Empty lists are allowed.
-
-performance parameters: period, start, end, exchange. Always uses daily adjusted closes. Returns 422 insufficient_data when the window has fewer than 3 prices.
-
-See docs/methodology.md for the formulas.
+Parameters: period (default 5y), start, end, exchange. Returns 422 insufficient_data when the window has fewer than 60 returns. Each test returns id, name, applied_to, null_hypothesis, statistic, p_value, reject_null, alpha, interpretation and details.

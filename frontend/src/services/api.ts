@@ -1,5 +1,5 @@
 import type {
-  Bar, Company, Envelope, ExchangeStatus, IndicatorSeries, Interval, Movers, Performance, Period, Profile, Quote,
+  Bar, Company, Envelope, ExchangeStatus, IndicatorSeries, Interval, Movers, Performance, Period, Profile, Quote, Statistics,
 } from "../types/api";
 
 export class ApiError extends Error {
@@ -55,6 +55,8 @@ export const api = {
   ) => request<IndicatorSeries[]>(`${stock(symbol)}/indicators`, opts),
   getPerformance: (symbol: string, opts: { period?: Period; exchange?: string } = {}) =>
     request<Performance>(`${stock(symbol)}/performance`, opts),
+  getStatistics: (symbol: string, opts: { period?: Period; exchange?: string } = {}) =>
+    request<Statistics>(`${stock(symbol)}/statistics`, opts),
   getMarkets: () => request<Quote[]>("/api/v1/markets"),
   getMarketStatus: () => request<ExchangeStatus[]>("/api/v1/markets/status"),
   getMovers: (exchange?: string, limit = 5) => request<Movers>("/api/v1/markets/movers", { exchange, limit }),
