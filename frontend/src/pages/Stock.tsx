@@ -14,6 +14,7 @@ import Tabs, { type TabItem } from "../components/ui/Tabs";
 import Toggle from "../components/ui/Toggle";
 import RiskTab from "./RiskTab";
 import StatisticsTab from "./StatisticsTab";
+import VolatilityTab from "./VolatilityTab";
 import { useApi } from "../hooks/useApi";
 import { api } from "../services/api";
 import type { Interval, Period } from "../types/api";
@@ -25,7 +26,7 @@ const TABS: TabItem[] = [
   { id: "technical", label: "Technical", disabled: true },
   { id: "risk", label: "Risk" },
   { id: "statistics", label: "Statistics" },
-  { id: "forecast", label: "Forecast", disabled: true },
+  { id: "forecast", label: "Volatility models" },
 ];
 
 const PERIODS: { value: Period; label: string }[] = [
@@ -189,6 +190,10 @@ export default function Stock() {
 
       {tab === "risk" && (
         <RiskTab symbol={symbol} exchange={exchange} period={period} periodControl={periodControl} />
+      )}
+
+      {tab === "forecast" && (
+        <VolatilityTab symbol={symbol} exchange={exchange} period={period} periodControl={periodControl} />
       )}
 
       {tab === "statistics" && (

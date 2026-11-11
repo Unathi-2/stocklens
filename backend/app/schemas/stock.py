@@ -242,3 +242,46 @@ class RiskOut(BaseModel):
     var: list[VarRowOut]
     backtests: list[BacktestOut]
     garch: GarchOut | None
+
+
+class ResidualTestsOut(BaseModel):
+    ljung_box_p: float
+    ljung_box_squared_p: float
+    jarque_bera_p: float
+
+
+class NewsImpactOut(BaseModel):
+    shock: list[float]
+    volatility: list[float]
+
+
+class VolModelOut(BaseModel):
+    id: str
+    name: str
+    converged: bool
+    error: str | None
+    n_params: int | None
+    log_likelihood: float | None
+    aic: float | None
+    bic: float | None
+    parameters: list[GarchParamOut]
+    persistence: float | None
+    half_life_days: float | None
+    memory_d: float | None
+    mean_volatility_pct: float | None
+    latest_volatility_pct: float | None
+    residual_tests: ResidualTestsOut | None
+    volatility: list[float]
+    forecast: list[float]
+    news_impact: NewsImpactOut | None
+
+
+class VolatilityModelsOut(BaseModel):
+    dates: list[date]
+    observations: int
+    horizon: int
+    forecast_dates: list[date]
+    realised_21d: list[float | None]
+    models: list[VolModelOut]
+    best_aic: str | None
+    best_bic: str | None

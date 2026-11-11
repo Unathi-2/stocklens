@@ -38,3 +38,28 @@ Prices are adjusted closes. Volatility uses daily log returns scaled by the squa
 - **GARCH(1,1)**: constant mean, normal errors, maximum likelihood through the arch package, on percent log returns. Reports omega, alpha, beta with standard errors, persistence (alpha plus beta), the half life of a shock, the long run volatility when persistence is below 1, log likelihood, AIC, BIC and the conditional volatility path. Needs at least 500 returns.
 
 These describe the past window shown. Other GARCH family models, fat tailed errors and forecasts belong to phase 9.
+
+## Volatility models (phase 9)
+
+Every model uses daily log returns in percent, a constant mean and normal errors, estimated by (quasi) maximum likelihood on the same window, so log likelihood, AIC and BIC are comparable. Volatility is annualised with the square root of 252. At least 500 returns are required.
+
+| Model | Variance equation (z is the standardised shock e / sigma) | Source |
+|---|---|---|
+| sGARCH(1,1) | sigma2 = omega + alpha e2 + beta sigma2 | arch |
+| EGARCH(1,1) | ln sigma2 = omega + alpha (abs(z) - sqrt(2/pi)) + gamma z + beta ln sigma2 | arch |
+| GJR-GARCH(1,1) | sigma2 = omega + (alpha + gamma I[e < 0]) e2 + beta sigma2 | arch |
+| FIGARCH(1,d,1) | fractionally integrated GARCH, hyperbolic decay of shocks | arch |
+| APARCH(1,1) | sigma^delta = omega + alpha (abs(e) - gamma e)^delta + beta sigma^delta | arch |
+| fGARCH(1,1) | sigma^delta = omega + alpha sigma^delta (abs(z - eta2) - eta1 (z - eta2))^delta + beta sigma^delta | this project |
+
+fGARCH is the family GARCH of Hentschel (1995) in the form with lambda equal to delta (the ALLGARCH submodel in rugarch). Setting eta2 to 0 gives APARCH, delta to 2 with eta2 to 0 gives GJR like asymmetry, and eta1 and eta2 to 0 with delta 2 gives sGARCH. The `arch` package has no fGARCH, so it is estimated here with L-BFGS-B from two starting points (a GARCH like point and the APARCH solution), and standard errors come from a numerical Hessian. Seven parameters are weakly identified on typical equity samples, so the Hessian is often not positive definite and standard errors are then shown as unavailable. Compare fGARCH mainly through its likelihood and criteria.
+
+Comparison measures:
+- **AIC and BIC** from the log likelihood and the number of parameters. The AIC gap to the best model is shown, and a gap under about 2 means the data do not separate the models.
+- **Persistence**: sGARCH alpha plus beta, GJR alpha plus gamma/2 plus beta, EGARCH beta, APARCH and fGARCH beta plus alpha times the expectation of the shock function under a standard normal (computed by numerical integration). FIGARCH reports its memory parameter d instead.
+- **Half life**: ln(0.5) / ln(persistence), when persistence is between 0 and 1.
+- **Standardised residual checks**: Ljung Box (10 lags) on residuals and squared residuals, and Jarque Bera. A small p value on squared residuals means volatility clustering is left over.
+- **News impact curve**: next day volatility after a shock of -4 to +4 standard deviations, starting from each model's average conditional volatility. The EGARCH gamma follows the `arch` convention, so a negative gamma means falls raise volatility more than rises.
+- **Forecasts**: 10 trading days. sGARCH, GJR and FIGARCH use exact (analytic) recursions. EGARCH, APARCH and fGARCH use 5,000 simulated paths with a fixed seed, so repeated requests agree.
+
+Limits: the comparison is in sample. It does not yet rank models by out of sample forecast loss, which needs rolling re estimation. Normal errors understate tail risk, and fat tailed errors (Student t, skewed t) are a natural next step.

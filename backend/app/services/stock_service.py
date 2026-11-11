@@ -5,13 +5,15 @@ import pandas as pd
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.analytics import performance, risk, statistics, technical
+from collections import OrderedDict
+
+from app.analytics import performance, risk, statistics, technical, volatility
 from app.analytics.returns import log_returns
 from app.core.errors import AmbiguousSymbol, InsufficientData, NoPriceData, StockNotFound
 from app.models import Company, PriceHistory
 from app.schemas.stock import (
     BarOut, DayValueOut, IndicatorOut, MoverOut, PerformanceOut, PerformanceSummaryOut,
-    PointOut, ProfileOut, QuoteOut, RiskOut, StatisticsOut,
+    PointOut, ProfileOut, QuoteOut, RiskOut, StatisticsOut, VolatilityModelsOut,
 )
 
 PERIOD_DAYS = {"1m": 31, "3m": 92, "6m": 183, "1y": 366, "5y": 1827}
@@ -322,3 +324,28 @@ def get_risk(
             "garch": garch,
         }
     )
+
+
+_VOL_CACHE: "OrderedDict[tuple, VolatilityModelsOut]" = OrderedDict()
+_VOL_CACHE_SIZE = 32
+
+
+def get_volatility_models(
+    db: Session, company: Company, period: str, start: date | None, end: date | None
+) -> VolatilityModelsOut:
+    """Fits six volatility models. Results are cached per stock and window, because the fit takes a few seconds."""
+    bars = get_history(db, company, period, "1d", start, end)
+    if len(bars) < volatility.MIN_OBSERVATIONS + 1:
+        raise InsufficientData(company.symbol)
+
+    key = (company.id, bars[0].date, bars[-1].date, len(bars))
+    if key in _VOL_CACHE:
+        _VOL_CACHE.move_to_end(key)
+        return _VOL_CACHE[key]
+
+    prices = pd.Series([b.adjusted_close for b in bars], index=pd.to_datetime([b.date for b in bars]))
+    result = VolatilityModelsOut.model_validate(volatility.analyse(prices))
+    _VOL_CACHE[key] = result
+    while len(_VOL_CACHE) > _VOL_CACHE_SIZE:
+        _VOL_CACHE.popitem(last=False)
+    return result

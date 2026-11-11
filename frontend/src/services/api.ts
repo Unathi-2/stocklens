@@ -1,5 +1,5 @@
 import type {
-  Bar, Company, Envelope, ExchangeStatus, IndicatorSeries, Interval, Movers, Performance, Period, Profile, Quote, Risk, Statistics,
+  Bar, Company, Envelope, ExchangeStatus, IndicatorSeries, Interval, Movers, Performance, Period, Profile, Quote, Risk, Statistics, VolatilityModels,
 } from "../types/api";
 import { API_BASE } from "./base";
 
@@ -60,6 +60,8 @@ export const api = {
     request<Statistics>(`${stock(symbol)}/statistics`, opts),
   getRisk: (symbol: string, opts: { period?: Period; risk_free?: number; exchange?: string } = {}) =>
     request<Risk>(`${stock(symbol)}/risk`, opts),
+  getVolatilityModels: (symbol: string, opts: { period?: Period; exchange?: string } = {}) =>
+    request<VolatilityModels>(`${stock(symbol)}/volatility-models`, opts),
   getMarkets: () => request<Quote[]>("/api/v1/markets"),
   getMarketStatus: () => request<ExchangeStatus[]>("/api/v1/markets/status"),
   getMovers: (exchange?: string, limit = 5) => request<Movers>("/api/v1/markets/movers", { exchange, limit }),

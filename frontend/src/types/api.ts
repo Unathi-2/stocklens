@@ -206,3 +206,35 @@ export interface Risk {
   backtests: Backtest[];
   garch: Garch | null;
 }
+
+export interface VolModel {
+  id: string;
+  name: string;
+  converged: boolean;
+  error: string | null;
+  n_params: number | null;
+  log_likelihood: number | null;
+  aic: number | null;
+  bic: number | null;
+  parameters: GarchParam[];
+  persistence: number | null;
+  half_life_days: number | null;
+  memory_d: number | null;
+  mean_volatility_pct: number | null;
+  latest_volatility_pct: number | null;
+  residual_tests: { ljung_box_p: number; ljung_box_squared_p: number; jarque_bera_p: number } | null;
+  volatility: number[];
+  forecast: number[];
+  news_impact: { shock: number[]; volatility: number[] } | null;
+}
+
+export interface VolatilityModels {
+  dates: string[];
+  observations: number;
+  horizon: number;
+  forecast_dates: string[];
+  realised_21d: (number | null)[];
+  models: VolModel[];
+  best_aic: string | null;
+  best_bic: string | null;
+}

@@ -11,7 +11,7 @@ Portfolio ready means phases 0 to 9 plus basic deployment. Phases 10 and 11 are 
 - [x] Phase 6 Charts and stock page (first release)
 - [x] Phase 7 Statistical analytics
 - [x] Phase 8 Risk and volatility engine
-- [ ] Phase 9 Volatility forecasting and model comparison
+- [x] Phase 9 Volatility forecasting and model comparison (six models, in sample comparison)
 - [ ] Phase 10 Watchlists and paper portfolio (auth optional)
 - [ ] Phase 11 Hardening: tests, security, caching
 - [~] Phase 12 Deployment (first live version, docs/deployment.md); case study still to write

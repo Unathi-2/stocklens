@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.errors import InvalidParameter
 from app.schemas.stock import (
-    BarOut, CompanyOut, Envelope, IndicatorOut, PerformanceOut, ProfileOut, QuoteOut, RiskOut, StatisticsOut,
+    BarOut, CompanyOut, Envelope, IndicatorOut, PerformanceOut, ProfileOut, QuoteOut, RiskOut, StatisticsOut, VolatilityModelsOut,
 )
 from app.services import stock_service as svc
 
@@ -162,5 +162,28 @@ def get_risk(
             "minimum_observations": 60,
             "garch_minimum_observations": 500,
             "backtest_window": 250,
+        },
+    }
+
+
+@router.get("/{symbol}/volatility-models", response_model=Envelope[VolatilityModelsOut], responses=ERRORS)
+def get_volatility_models(
+    symbol: str,
+    period: Period = "5y",
+    start: date | None = Query(None, description="Overrides period when given"),
+    end: date | None = None,
+    exchange: str | None = Exchange,
+    db: Session = Depends(get_db),
+):
+    company = svc.find_company(db, symbol, exchange)
+    result = svc.get_volatility_models(db, company, period, start, end)
+    return {
+        "data": result,
+        "meta": {
+            "models": [m.id for m in result.models],
+            "returns": "daily log returns in percent, constant mean, normal errors",
+            "volatility_units": "annualised percent, sqrt(252)",
+            "forecast_method": "analytic where available, otherwise 5000 simulated paths with a fixed seed",
+            "minimum_observations": 500,
         },
     }
