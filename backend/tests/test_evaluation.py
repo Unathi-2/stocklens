@@ -22,6 +22,15 @@ def test_proxies_match_formulas():
     assert p["garman_klass"].iloc[0] == pytest.approx(gk)
 
 
+def test_rolling_forecasts_rejects_invalid_inputs():
+    with pytest.raises(ValueError, match="window must be an integer of at least 2"):
+        ev.rolling_forecasts(pd.Series(np.ones(10)), window=0, refit_every=1)
+    with pytest.raises(ValueError, match="refit_every must be a positive integer"):
+        ev.rolling_forecasts(pd.Series(np.ones(10)), window=2, refit_every=0)
+    with pytest.raises(ValueError, match="returns must contain only finite values"):
+        ev.rolling_forecasts(pd.Series([1.0, 2.0, np.nan, 4.0]), window=2, refit_every=1)
+
+
 def test_qlike_properties():
     px = np.array([1.0, 1.0, 1.0])
     h = np.array([1.0, 0.5, 2.0])

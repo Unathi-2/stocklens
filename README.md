@@ -1,49 +1,108 @@
 # StockLens
 
-An interactive analytics platform for exploring JSE and US equities, measuring risk, and experimenting with statistical and machine learning volatility models.
+StockLens is an interactive financial analytics platform for exploring JSE and US equities, studying return behaviour and downside risk, and comparing statistical volatility models. It is built as a data science portfolio project with an emphasis on transparent methodology and reproducible evaluation.
 
-StockLens is an analytics application. It does not trade, and it does not tell anyone what to buy.
+**Live application:** https://stocklens-rouge.vercel.app  
+**Source code:** https://github.com/Unathi-2/stocklens
 
-## Status
+StockLens is for education and research. It does not trade, provide personalised investment advice, or tell users what to buy.
 
-Working today: JSE and US data pipeline, REST API, dashboard, stock pages with interactive price charts
-(line or candles, volume, moving averages), and return and volatility summaries.
-See docs/roadmap.md for the full plan and docs/methodology.md for the formulas.
+## What it does
 
-## Planned features
+- Explore JSE and US equities through market views, stock search, profiles, and interactive price charts.
+- Inspect daily returns, distributional properties, stationarity, serial dependence, and ARCH effects.
+- Compare risk measures including drawdown, annualised volatility, Sharpe and Sortino ratios, historical and parametric VaR, and expected shortfall.
+- Fit and inspect six conditional volatility specifications: sGARCH, EGARCH, GJR GARCH, FIGARCH, APARCH, and a project implementation of fGARCH.
+- Compare one day ahead out of sample variance forecasts with QLIKE and mean squared error.
+- Inspect Diebold Mariano comparisons against an sGARCH benchmark and Model Confidence Set results.
 
-- Market overview for the JSE All Share and US indices
-- Stock search, profiles, price history and technical indicators
-- Return and distribution analysis with ADF, ARCH LM, Jarque Bera and Ljung Box tests
-- Risk metrics: volatility, drawdown, VaR, Expected Shortfall
-- Volatility modelling with GARCH, EGARCH and GJR GARCH under several error distributions
-- Forecast comparison of naive, ARIMA, GARCH, LSTM and a GARCH LSTM hybrid
-- Paper portfolios and watchlists
+## What makes the project useful
 
-## Tech stack
+The goal is to make the reasoning behind an analytical result inspectable, not to present a model score without context.
 
-React, TypeScript, Tailwind CSS, FastAPI, SQLAlchemy, PostgreSQL, statsmodels, arch, Docker.
+- JSE and US market coverage in one application.
+- Statistical tests are accompanied by their hypotheses and interpretations.
+- Forecast models are compared on a chronological out of sample evaluation, rather than only on the data used to fit them.
+- Forecast losses, variance proxies, model failures, non convergence counts, and evaluation settings are retained with the stored run.
+- The methodology and known limitations are documented in the repository.
 
-## Run it in GitHub Codespaces
+## Forecast evaluation at a glance
 
-1. Open the repository in a Codespace. The dev container installs dependencies.
-2. Start the database: `docker compose up -d db`
-3. Backend: `cd backend && uvicorn app.main:app --reload`
-4. Frontend, in a second terminal: `cd frontend && npm run dev`
-5. Open the forwarded port 5173. The sidebar page should show "API: online".
+The current evaluation compares six volatility models using rolling estimation. By default, models are estimated on 500 prior daily log returns and re estimated every 20 trading days. Forecasts are evaluated against squared return, Parkinson, and Garman Klass realised variance proxies.
 
-Run the tests with `cd backend && pytest -q`.
+The evaluation reports QLIKE and mean squared error, model ranks, Diebold Mariano tests, and a Model Confidence Set at a 10% significance level. Range based proxies are rescaled to match the mean squared return proxy over the evaluation period. The selected proxy, scale factor, sample size, dates, model failures, and convergence information are exposed to help users interpret the results.
 
-Or run everything with `docker compose up`.
+These comparisons are not proof that one model will perform best in the future. Results depend on the ticker, evaluation period, proxy, estimation settings, and assumptions. The current setup uses one day ahead forecasts and normal innovations. See [the methodology](docs/methodology.md) for details and limitations.
 
-## Project layout
+## Technology
 
-- backend/app/api: HTTP routes only
-- backend/app/services: orchestration, database and market data providers
-- backend/app/analytics: pure statistical functions, no web code
-- frontend/src: React application
-- docs: product definition, architecture, roadmap
+| Layer | Tools |
+| --- | --- |
+| Frontend | React, TypeScript, Tailwind CSS, Lightweight Charts |
+| API | FastAPI, Pydantic |
+| Data layer | PostgreSQL, SQLAlchemy, Alembic |
+| Analytics | Python, NumPy, pandas, SciPy, statsmodels, arch |
+| Delivery | Docker, GitHub Actions, Vercel, Render |
+
+## Run locally in GitHub Codespaces
+
+1. Open this repository in a Codespace.
+2. Start the development environment:
+
+   ```bash
+   ./scripts/dev.sh
+   ```
+
+3. Open the forwarded frontend port 5173. The app should report that the API is online.
+
+The helper starts the database, applies migrations, and launches the backend and frontend. For manual startup, start PostgreSQL with `docker compose up -d db`, then run the backend from `backend/` with `uvicorn app.main:app --reload` and the frontend from `frontend/` with `npm run dev`.
+
+Run the backend test suite with:
+
+```bash
+cd backend
+pytest -q
+```
+
+Build the frontend with:
+
+```bash
+cd frontend
+npm install
+npm run build
+```
+
+For setup details, see [the development guide](docs/development.md) and [deployment guide](docs/deployment.md).
+
+## Reproduce the rolling forecast evaluation
+
+After the database is populated and migrations are current, run the evaluation from the backend directory:
+
+```bash
+python -m app.scripts.evaluate --symbols NPN AAPL
+```
+
+Replace the symbols with companies available in your database. The default uses a 500 return estimation window and refits every 20 trading days. For a shorter development run, you can set the options explicitly, for example:
+
+```bash
+python -m app.scripts.evaluate --symbols NPN --window 300 --refit-every 40
+```
+
+The evaluation stores the forecasts and diagnostics in the database. It can take time because each model is repeatedly re estimated. The app does not fabricate evaluation results when no stored run exists.
+
+## Project documentation
+
+- [Product definition](docs/product.md), goals, intended users, and non goals.
+- [Architecture](docs/architecture.md), application boundaries and component responsibilities.
+- [Data pipeline](docs/data-pipeline.md), ingestion and refresh process.
+- [Statistical methodology](docs/methodology.md), formulas, tests, model assumptions, and evaluation limitations.
+- [Research case study](docs/case-study.md), research question, experimental design, and interpretation guide.
+- [Roadmap](docs/roadmap.md), completed work and planned extensions.
+
+## Roadmap
+
+The deployed application includes market data ingestion, stock analytics, risk measures, volatility models, and an out of sample evaluation workflow. Planned extensions include broader machine learning and deep learning volatility benchmarks, watchlists, paper portfolios, and additional operational hardening. The roadmap tracks these separately from the features available today.
 
 ## Disclaimer
 
-For education and research. Nothing here is financial advice.
+StockLens is an educational analytics tool. Historical estimates and model forecasts are uncertain and are not financial advice.

@@ -97,6 +97,14 @@ def rolling_forecasts(r: pd.Series, window: int = 500, refit_every: int = 20, pr
     """
     import warnings
 
+    if not isinstance(window, int) or isinstance(window, bool) or window < 2:
+        raise ValueError("window must be an integer of at least 2")
+    if not isinstance(refit_every, int) or isinstance(refit_every, bool) or refit_every < 1:
+        raise ValueError("refit_every must be a positive integer")
+    values = r.to_numpy(dtype=float)
+    if not np.isfinite(values).all():
+        raise ValueError("returns must contain only finite values")
+
     n = len(r)
     if n < window + refit_every:
         raise ValueError("not enough returns for the chosen window")
