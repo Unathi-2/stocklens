@@ -132,12 +132,14 @@ _FG_NAMES = ["mu", "omega", "alpha", "beta", "eta1", "eta2", "delta"]
 _FG_BOUNDS = [(-2.0, 2.0), (1e-8, 50.0), (0.0, 1.0), (0.0, 0.9999), (-0.99, 0.99), (-2.0, 2.0), (0.5, 3.5)]
 
 
-def _fgarch_filter(theta, r: np.ndarray):
+def _fgarch_filter(theta, r: np.ndarray, init_var: float | None = None):
     # plain Python floats: overflow raises OverflowError (handled) instead of a numpy warning
     mu, omega, alpha, beta, eta1, eta2, delta = (float(t) for t in theta)
     inv = 1.0 / delta
     eps = (r - mu).tolist()
-    h = (sum(e * e for e in eps) / len(eps)) ** (delta / 2.0)
+    # initial variance: sample variance of the series, or a value supplied by the caller (used to keep forecasts causal)
+    v0 = init_var if init_var is not None else sum(e * e for e in eps) / len(eps)
+    h = v0 ** (delta / 2.0)
     sig = [0.0] * len(eps)
     for t, e in enumerate(eps):
         s = h**inv

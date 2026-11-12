@@ -42,7 +42,7 @@ export interface VolSeries {
 const AMBER = "#d9992b"; // reads on both themes, same family as the moving average colours
 
 /** One or more annualised volatility lines, in percent. */
-export function VolatilityChart({ series, label, height = 260 }: { series: VolSeries[]; label: string; height?: number }) {
+export function VolatilityChart({ series, label, height = 260, format }: { series: VolSeries[]; label: string; height?: number; format?: (v: number) => string }) {
   const { theme } = useTheme();
   const ref = useRef<HTMLDivElement>(null);
 
@@ -50,7 +50,7 @@ export function VolatilityChart({ series, label, height = 260 }: { series: VolSe
     const el = ref.current;
     if (!el || series.every((s) => s.points.length === 0)) return;
     const c = readColors();
-    const chart = createChart(el, baseOptions(c, height, (p) => `${formatNumber(p, 1)}%`));
+    const chart = createChart(el, baseOptions(c, height, format ?? ((p) => `${formatNumber(p, 1)}%`)));
     for (const s of series) {
       const line = chart.addSeries(LineSeries, {
         color: s.color === "accent" ? c.accent : s.color === "amber" ? AMBER : s.color === "muted" ? c.muted : s.color,
@@ -60,7 +60,7 @@ export function VolatilityChart({ series, label, height = 260 }: { series: VolSe
     }
     chart.timeScale().fitContent();
     return () => chart.remove();
-  }, [series, height, theme]);
+  }, [series, height, theme, format]);
 
   return <div ref={ref} role="img" aria-label={label} style={{ height }} />;
 }

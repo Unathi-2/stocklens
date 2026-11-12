@@ -1,6 +1,6 @@
 # Roadmap
 
-Portfolio ready means phases 0 to 9 plus basic deployment. Phases 10 and 11 are extended scope.
+Portfolio ready means phases 0 to 10 plus basic deployment. Phases 11 and later are extended scope.
 
 - [x] Phase 0 Product definition (docs/product.md)
 - [x] Phase 1 Setup: devcontainer, compose, health endpoint, frontend shell
@@ -12,6 +12,8 @@ Portfolio ready means phases 0 to 9 plus basic deployment. Phases 10 and 11 are 
 - [x] Phase 7 Statistical analytics
 - [x] Phase 8 Risk and volatility engine
 - [x] Phase 9 Volatility forecasting and model comparison (six models, in sample comparison)
-- [ ] Phase 10 Watchlists and paper portfolio (auth optional)
-- [ ] Phase 11 Hardening: tests, security, caching
-- [~] Phase 12 Deployment (first live version, docs/deployment.md); case study still to write
+- [x] Phase 10 Out of sample forecast evaluation (rolling re-estimation, QLIKE and MSE, Diebold Mariano, Model Confidence Set)
+- [ ] Phase 11 Machine learning and deep learning volatility models (HAR, ridge, boosting, LSTM, GARCH-LSTM), scored on the Phase 10 harness
+- [ ] Phase 12 Watchlists and paper portfolio (auth optional)
+- [ ] Phase 13 Hardening: tests, security, caching
+- [~] Phase 14 Deployment (first live version, docs/deployment.md); case study still to write

@@ -238,3 +238,46 @@ export interface VolatilityModels {
   best_aic: string | null;
   best_bic: string | null;
 }
+
+export interface DmTest {
+  mean_difference: number;
+  statistic: number;
+  p_value: number;
+}
+
+export interface EvaluationModel {
+  id: string;
+  name: string;
+  mean_qlike: number;
+  mean_mse: number;
+  rank_qlike: number;
+  rank_mse: number;
+  dm_qlike: DmTest | null;
+  dm_mse: DmTest | null;
+  mcs_p_qlike: number;
+  mcs_p_mse: number;
+  in_mcs_qlike: boolean;
+  in_mcs_mse: boolean;
+  failures: number;
+  non_converged: number;
+}
+
+export type Proxy = "parkinson" | "garman_klass" | "squared_return";
+
+export interface Evaluation {
+  proxy: Proxy;
+  scale_factor: number;
+  observations: number;
+  dropped: number;
+  first_date: string;
+  last_date: string;
+  window: number;
+  refit_every: number;
+  benchmark: string;
+  mcs_alpha: number;
+  run_at: string;
+  data_end: string;
+  models: EvaluationModel[];
+  excluded: string[];
+  cumulative: { dates: string[]; series: Record<string, number[]> };
+}

@@ -25,6 +25,11 @@ class InsufficientData(Exception):
         self.symbol = symbol
 
 
+class EvaluationNotFound(Exception):
+    def __init__(self, symbol: str):
+        self.symbol = symbol
+
+
 class InvalidParameter(Exception):
     def __init__(self, message: str):
         self.message = message
@@ -56,3 +61,11 @@ def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(InvalidParameter)
     async def _invalid(_: Request, exc: InvalidParameter):
         return JSONResponse(status_code=422, content=_body("invalid_parameter", exc.message))
+
+    @app.exception_handler(EvaluationNotFound)
+    async def _no_evaluation(_: Request, exc: EvaluationNotFound):
+        msg = (
+            f"No forecast evaluation has been run for {exc.symbol}. "
+            f"Run: python -m app.scripts.evaluate --symbols {exc.symbol}"
+        )
+        return JSONResponse(status_code=404, content=_body("evaluation_not_found", msg))

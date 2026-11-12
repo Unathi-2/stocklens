@@ -13,6 +13,7 @@ import { useApi } from "../hooks/useApi";
 import { api } from "../services/api";
 import type { Period, VolatilityModels, VolModel } from "../types/api";
 import { formatDate, formatNumber } from "../utils/format";
+import { MODEL_COLORS } from "../utils/models";
 
 interface Props {
   symbol: string;
@@ -20,15 +21,6 @@ interface Props {
   period: Period;
   periodControl: ReactNode;
 }
-
-const MODEL_COLORS: Record<string, string> = {
-  sgarch: "#4f8ef7",
-  egarch: "#e0698f",
-  gjr: "#d9992b",
-  figarch: "#3fb3c4",
-  fgarch: "#a47be0",
-  aparch: "#7fbf6a",
-};
 
 const DESCRIPTIONS: Record<string, string> = {
   sgarch: "Variance depends on the last squared shock and the last variance. Gains and losses of the same size count equally.",

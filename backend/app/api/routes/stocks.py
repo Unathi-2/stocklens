@@ -7,9 +7,9 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.errors import InvalidParameter
 from app.schemas.stock import (
-    BarOut, CompanyOut, Envelope, IndicatorOut, PerformanceOut, ProfileOut, QuoteOut, RiskOut, StatisticsOut, VolatilityModelsOut,
+    BarOut, CompanyOut, Envelope, IndicatorOut, PerformanceOut, ProfileOut, QuoteOut, RiskOut, StatisticsOut, VolatilityModelsOut, EvaluationOut,
 )
-from app.services import stock_service as svc
+from app.services import evaluation_service, stock_service as svc
 
 router = APIRouter(prefix="/api/v1/stocks", tags=["stocks"])
 
@@ -185,5 +185,25 @@ def get_volatility_models(
             "volatility_units": "annualised percent, sqrt(252)",
             "forecast_method": "analytic where available, otherwise 5000 simulated paths with a fixed seed",
             "minimum_observations": 500,
+        },
+    }
+
+
+@router.get("/{symbol}/forecast-evaluation", response_model=Envelope[EvaluationOut], responses=ERRORS)
+def get_forecast_evaluation(
+    symbol: str,
+    proxy: str = Query("parkinson", description="parkinson, garman_klass or squared_return"),
+    exchange: str | None = Exchange,
+    db: Session = Depends(get_db),
+):
+    company = svc.find_company(db, symbol, exchange)
+    result = evaluation_service.get_evaluation(db, company, proxy)
+    return {
+        "data": result,
+        "meta": {
+            "scheme": "rolling window, parameters re-estimated every refit_every days, one day ahead variance",
+            "losses": ["QLIKE", "MSE"],
+            "tests": "Diebold Mariano (Newey West, Harvey Leybourne Newbold) and Model Confidence Set (range statistic, block bootstrap)",
+            "produced_by": "python -m app.scripts.evaluate",
         },
     }

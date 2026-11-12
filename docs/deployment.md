@@ -32,3 +32,13 @@ The free API sleeps after inactivity, so the first request after a pause can tak
 
 ## 4. Daily refresh
 Repo settings, Secrets and variables, Actions: add `DATABASE_URL` (the Neon string). Run the workflow once from the Actions tab to confirm.
+
+## 5. Forecast evaluation data (phase 10)
+The evaluation table is created by a migration. In the backend folder run `alembic revision --autogenerate -m "volatility evaluations"`, commit the new file, and run `alembic upgrade head` (Render does this on every start). The batch job needs a database address, so for the live site run it once against Neon from the Codespace:
+```bash
+cd backend
+export DATABASE_URL='<neon connection string>'
+alembic upgrade head
+python -m app.scripts.evaluate --symbols NPN AAPL
+```
+Open a new terminal afterwards so the export does not stay active.

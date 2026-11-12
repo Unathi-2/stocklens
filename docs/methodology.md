@@ -63,3 +63,19 @@ Comparison measures:
 - **Forecasts**: 10 trading days. sGARCH, GJR and FIGARCH use exact (analytic) recursions. EGARCH, APARCH and fGARCH use 5,000 simulated paths with a fixed seed, so repeated requests agree.
 
 Limits: the comparison is in sample. It does not yet rank models by out of sample forecast loss, which needs rolling re estimation. Normal errors understate tail risk, and fat tailed errors (Student t, skewed t) are a natural next step.
+
+## Out of sample forecast evaluation (phase 10)
+
+Run with `python -m app.scripts.evaluate` (about 15 to 60 seconds per stock). Results are stored, and the API computes the losses and tests from the stored forecasts.
+
+**Scheme.** Each of the six models is estimated on the previous 500 daily log returns and re-estimated every 20 trading days. Between re-estimations the parameters stay fixed while the variance recursion runs forward over new returns, so the one day ahead forecast for day t uses returns up to t-1 only. If a re-estimation fails, the previous parameters are reused and the failure is counted. A test checks that changing later returns does not change earlier forecasts. One small exception: `arch` sets the pre sample variance of FIGARCH from the series it is given, which makes FIGARCH forecasts depend very slightly (below 0.05 percent) on later returns inside the same block.
+
+**Realised variance proxies** (daily, in percent squared): the squared close to close log return of the adjusted close, the Parkinson range estimator ln(H/L)^2 / (4 ln 2), and Garman-Klass 0.5 ln(H/L)^2 - (2 ln 2 - 1) ln(C/O)^2. Range proxies miss the overnight gap, so they are multiplied by a constant that equalises their mean to the mean squared return over the evaluation days (the factor is shown). Days with a proxy of zero or below, or a missing forecast, are dropped for all models.
+
+**Losses.** QLIKE = p/h - ln(p/h) - 1 and MSE = (p - h)^2, where h is the variance forecast and p the proxy. Both are robust to noise in an unbiased proxy (Patton, 2011). QLIKE penalises under prediction more than over prediction.
+
+**Diebold Mariano.** Tests equal expected loss against the benchmark (sGARCH). The loss difference series has Newey West variance with floor(n^(1/3)) lags, the statistic is scaled by the Harvey, Leybourne and Newbold correction and compared with a t distribution on n-1 degrees of freedom, two sided. A positive mean difference means the model has the lower loss.
+
+**Model Confidence Set.** Hansen, Lunde and Nason (2011), range statistic T_max with a circular block bootstrap (1,000 draws, block length floor(n^(1/3)), fixed seed). Models are eliminated one at a time while equal predictive ability is rejected at 10 percent. A model is in the set when its MCS p value is at least 0.10. A large set is common with a few years of data and means the models cannot be separated.
+
+Limits: one day ahead variance only (no multi step evaluation), one benchmark for the pairwise tests, normal errors in every model, and results from a single stock and period, so they say little about other stocks or other times.

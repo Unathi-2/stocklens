@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Generic, Literal, TypeVar
 
 from pydantic import BaseModel, ConfigDict
@@ -285,3 +285,49 @@ class VolatilityModelsOut(BaseModel):
     models: list[VolModelOut]
     best_aic: str | None
     best_bic: str | None
+
+
+class DmOut(BaseModel):
+    mean_difference: float
+    statistic: float
+    p_value: float
+
+
+class EvaluationModelOut(BaseModel):
+    id: str
+    name: str
+    mean_qlike: float
+    mean_mse: float
+    rank_qlike: int
+    rank_mse: int
+    dm_qlike: DmOut | None
+    dm_mse: DmOut | None
+    mcs_p_qlike: float
+    mcs_p_mse: float
+    in_mcs_qlike: bool
+    in_mcs_mse: bool
+    failures: int
+    non_converged: int
+
+
+class CumulativeOut(BaseModel):
+    dates: list[date]
+    series: dict[str, list[float]]
+
+
+class EvaluationOut(BaseModel):
+    proxy: str
+    scale_factor: float
+    observations: int
+    dropped: int
+    first_date: date
+    last_date: date
+    window: int
+    refit_every: int
+    benchmark: str
+    mcs_alpha: float
+    run_at: datetime
+    data_end: date
+    models: list[EvaluationModelOut]
+    excluded: list[str]
+    cumulative: CumulativeOut
